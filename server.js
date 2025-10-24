@@ -125,13 +125,13 @@ app.post("/capture_payment_intent", async (req, res) => {
 
 // Stripe webhook endpoint for live events
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const endpointSecrets = endpointSecret.STRIPE_WEBHOOK_SECRET;
   const sig = req.headers['stripe-signature'];
   let event;
 
   try {
     // Use raw body for signature verification
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecrets);
   } catch (err) {
     console.log('⚠️  Webhook signature verification failed.', err.message);
     return res.sendStatus(400);
