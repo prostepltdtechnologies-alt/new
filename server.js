@@ -3,8 +3,8 @@ const express = require("express");
 const app = express();
 const { resolve } = require("path");
 // This is your test secret API key.
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const stripe = require("stripe")("sk_test_51SLDI0G674avhjqur6u1QkQ6cciBGeHHXpDiwSUOKpiAwYSrr62AZXTtNq8FzvQi3Pq3Dnz37dtiOHGJxt9TFzwH00RKADbY5f")
+// (process.env.STRIPE_SECRET_KEY);
 
 app.use(express.static("public"));
 app.use(express.json());
@@ -125,35 +125,32 @@ app.post("/capture_payment_intent", async (req, res) => {
 
 // Stripe webhook endpoint for live events
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const endpointSecrets = endpointSecret.STRIPE_WEBHOOK_SECRET;
   const sig = req.headers['stripe-signature'];
+  const webhookSecret = 'whsec_MPz6qOfRuFZMR9iKdrxCoocODf2Nq4dC';
   let event;
-
   try {
-    // Use raw body for signature verification
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecrets);
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
-    console.log('⚠️  Webhook signature verification failed.', err.message);
-    return res.sendStatus(400);
+    console.log('Webhook signature verification failed.', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle the event
+  // Handle Stripe events
   switch (event.type) {
     case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object;
-      console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`);
-      break;
-    case 'payment_method.attached':
-      const paymentMethod = event.data.object;
-      console.log('PaymentMethod attached:', paymentMethod.id);
+      // Payment succeeded, update order status etc.
+      console.log('PaymentIntent succeeded:', event.data.object.id);
       break;
     case 'payment_intent.payment_failed':
+      // Payment failed
       console.log('PaymentIntent failed:', event.data.object.id);
       break;
     case 'terminal.reader.action_failed':
+      // Reader action failed
       console.log('Reader action failed:', event.data.object.id);
       break;
     case 'terminal.reader.updated':
+      // Reader updated
       console.log('Reader updated:', event.data.object.id);
       break;
     default:
@@ -162,6 +159,5 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
 
   res.json({ received: true });
 });
-
 
 app.listen(4242, () => console.log('Node server listening on port 4242!'));
