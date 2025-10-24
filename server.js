@@ -4,6 +4,7 @@ const app = express();
 const { resolve } = require("path");
 // This is your test secret API key.
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 app.use(express.static("public"));
 app.use(express.json());
@@ -124,49 +125,51 @@ app.post("/capture_payment_intent", async (req, res) => {
 
 // Stripe webhook endpoint for live events
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  let event;
-  if (!sig) {
-    // Manual test: skip signature verification
-    console.log('No stripe-signature header, skipping verification (manual test)');
+  let event = req.body;
+  if (endpointSecret) {
+    const signature = req.headers['stripe-signature'];
     try {
-      event = JSON.parse(req.body);
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        signature,
+        endpointSecret
+      );
     } catch (err) {
-      return res.status(400).send('Invalid JSON');
+      console.log('⚠️  Webhook signature verification failed.', err.message);
+      return res.sendStatus(400);
     }
   } else {
     try {
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      event = JSON.parse(req.body.toString());
     } catch (err) {
-      console.log('Webhook signature verification failed.', err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
+      return res.status(400).send('Invalid JSON');
     }
   }
 
-  // Handle Stripe events
+  // Handle the event
   switch (event.type) {
     case 'payment_intent.succeeded':
-      // Payment succeeded, update order status etc.
-      console.log('PaymentIntent succeeded:', event.data.object.id);
+      const paymentIntent = event.data.object;
+      console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`);
+      break;
+    case 'payment_method.attached':
+      const paymentMethod = event.data.object;
+      console.log('PaymentMethod attached:', paymentMethod.id);
       break;
     case 'payment_intent.payment_failed':
-      // Payment failed
       console.log('PaymentIntent failed:', event.data.object.id);
       break;
     case 'terminal.reader.action_failed':
-      // Reader action failed
       console.log('Reader action failed:', event.data.object.id);
       break;
     case 'terminal.reader.updated':
-      // Reader updated
       console.log('Reader updated:', event.data.object.id);
       break;
     default:
       console.log(`Unhandled event type ${event.type}`);
   }
 
-  res.json({ received: true });
+  res.send();
 });
 
 app.listen(4242, () => console.log('Node server listening on port 4242!'));
