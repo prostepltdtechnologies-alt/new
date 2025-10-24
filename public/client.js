@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("capture-button").disabled = false;
   document.getElementById("view-dashboard-button").disabled = false;
 });
-var readerId = "tmr_GPfKsghM64Joif"; // Replace with your reader ID
+var readerId = "tmr_GPcMSAAiI6kpLL"; // Replace with your reader ID
 // function createLocation() {
 //   return fetch("/create_location", { method: "POST" }).then((response) => {
 //     return response.json();
