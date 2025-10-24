@@ -3,13 +3,13 @@ const express = require("express");
 const app = express();
 const { resolve } = require("path");
 // This is your test secret API key.
-const stripe = require("stripe")("sk_test_51SLDI0G674avhjqur6u1QkQ6cciBGeHHXpDiwSUOKpiAwYSrr62AZXTtNq8FzvQi3Pq3Dnz37dtiOHGJxt9TFzwH00RKADbY5f")
+const stripe = require("stripe")("sk_test_51L8MmGBjkTrfSxQwrX1M5aHDzLA6HOphvNrFmAlCmJTJlph5Gj9xiuwcxKoLyoriQgPAYRNjT3EfLJztGqWI3Kpu00dzeWZeh2")
 // (process.env.STRIPE_SECRET_KEY);
 
 // Stripe webhook endpoint for live events
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const sig = req.headers['stripe-signature'];
-  const webhookSecret = 'whsec_MPz6qOfRuFZMR9iKdrxCoocODf2Nq4dC';
+  const webhookSecret = 'whsec_PcyKlUsS6Z0EET2966N7GN3dLVhWLqUt';
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
@@ -47,14 +47,13 @@ app.post("/create_location", async (req, res) => {
   const location = await stripe.terminal.locations.create({
     display_name: 'HQ',
     address: {
-      line1: '1272 Valencia Street',
-      city: 'San Francisco',
-      state: 'CA',
-      country: 'US',
-      postal_code: '94110',
+      line1: '1272 Some Street',
+      city: 'London',
+      state: 'England',
+      country: 'GB', // UK country code
+      postal_code: 'SW1A 1AA',
     }
   });
-
   res.json(location);
 });
 
@@ -75,7 +74,7 @@ app.post("/create_payment_intent", async (req, res) => {
   // set `capture_method` to `automatic`.
   const intent = await stripe.paymentIntents.create({
     amount: req.body.amount,
-    currency: 'usd',
+    currency: 'gbp',
     payment_method_types: [
       'card_present',
     ],
