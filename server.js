@@ -3,13 +3,13 @@ const express = require("express");
 const app = express();
 const { resolve } = require("path");
 // This is your test secret API key.
-const stripe = require("stripe")("sk_test_51L8MmGBjkTrfSxQwrX1M5aHDzLA6HOphvNrFmAlCmJTJlph5Gj9xiuwcxKoLyoriQgPAYRNjT3EfLJztGqWI3Kpu00dzeWZeh2")
+const stripe = require("stripe")("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")
 // (process.env.STRIPE_SECRET_KEY);
 
 // Stripe webhook endpoint for live events
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const sig = req.headers['stripe-signature'];
-  const webhookSecret = 'whsec_PcyKlUsS6Z0EET2966N7GN3dLVhWLqUt';
+  const webhookSecret = 'whsec_Y1OjN6lIRJXiGznDfohrR9Ti4wm9hbH2';
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
@@ -58,12 +58,12 @@ app.post("/create_location", async (req, res) => {
 });
 
 app.post("/register_reader", async (req, res) => {
+  // Use real device registration code from device screen
   const reader = await stripe.terminal.readers.create({
-    registration_code: 'simulated-s700',
+    registration_code: req.body.registration_code, // e.g. code from WisePOS E screen
     location: req.body.location_id,
-    label: 'Quickstart - S700 Simulated Reader'
+    label: "Main Reader"
   });
-
   res.json(reader);
 });
 
