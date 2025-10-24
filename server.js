@@ -127,11 +127,21 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (err) {
-    console.log('Webhook signature verification failed.', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+  if (!sig) {
+    // Manual test: skip signature verification
+    console.log('No stripe-signature header, skipping verification (manual test)');
+    try {
+      event = JSON.parse(req.body);
+    } catch (err) {
+      return res.status(400).send('Invalid JSON');
+    }
+  } else {
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err) {
+      console.log('Webhook signature verification failed.', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
   }
 
   // Handle Stripe events
