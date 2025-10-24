@@ -6,6 +6,39 @@ const { resolve } = require("path");
 const stripe = require("stripe")("sk_test_51SLDI0G674avhjqur6u1QkQ6cciBGeHHXpDiwSUOKpiAwYSrr62AZXTtNq8FzvQi3Pq3Dnz37dtiOHGJxt9TFzwH00RKADbY5f")
 // (process.env.STRIPE_SECRET_KEY);
 
+// Stripe webhook endpoint for live events
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = 'whsec_MPz6qOfRuFZMR9iKdrxCoocODf2Nq4dC';
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+  } catch (err) {
+    console.log('Webhook signature verification failed.', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle Stripe events
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      console.log('PaymentIntent succeeded:', event.data.object.id);
+      break;
+    case 'payment_intent.payment_failed':
+      console.log('PaymentIntent failed:', event.data.object.id);
+      break;
+    case 'terminal.reader.action_failed':
+      console.log('Reader action failed:', event.data.object.id);
+      break;
+    case 'terminal.reader.updated':
+      console.log('Reader updated:', event.data.object.id);
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({ received: true });
+});
+
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -121,43 +154,6 @@ app.post("/simulate_payment", async (req, res) => {
 app.post("/capture_payment_intent", async (req, res) => {
   const intent = await stripe.paymentIntents.capture(req.body.payment_intent_id);
   res.send(intent);
-});
-
-// Stripe webhook endpoint for live events
-app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = 'whsec_MPz6qOfRuFZMR9iKdrxCoocODf2Nq4dC';
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (err) {
-    console.log('Webhook signature verification failed.', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Handle Stripe events
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      // Payment succeeded, update order status etc.
-      console.log('PaymentIntent succeeded:', event.data.object.id);
-      break;
-    case 'payment_intent.payment_failed':
-      // Payment failed
-      console.log('PaymentIntent failed:', event.data.object.id);
-      break;
-    case 'terminal.reader.action_failed':
-      // Reader action failed
-      console.log('Reader action failed:', event.data.object.id);
-      break;
-    case 'terminal.reader.updated':
-      // Reader updated
-      console.log('Reader updated:', event.data.object.id);
-      break;
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
-
-  res.json({ received: true });
 });
 
 app.listen(4242, () => console.log('Node server listening on port 4242!'));
