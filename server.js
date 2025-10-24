@@ -78,7 +78,7 @@ app.post("/create_payment_intent", async (req, res) => {
   // set `capture_method` to `automatic`.
   const intent = await stripe.paymentIntents.create({
     amount: req.body.amount,
-    currency: 'usd',
+    currency: 'gbp',
     payment_method_types: [
       'card_present',
     ],
