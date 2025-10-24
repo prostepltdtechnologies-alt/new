@@ -125,25 +125,16 @@ app.post("/capture_payment_intent", async (req, res) => {
 
 // Stripe webhook endpoint for live events
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  let event = req.body;
-  if (endpointSecret) {
-    const signature = req.headers['stripe-signature'];
-    try {
-      event = stripe.webhooks.constructEvent(
-        req.body,
-        signature,
-        endpointSecret
-      );
-    } catch (err) {
-      console.log('⚠️  Webhook signature verification failed.', err.message);
-      return res.sendStatus(400);
-    }
-  } else {
-    try {
-      event = JSON.parse(req.body.toString());
-    } catch (err) {
-      return res.status(400).send('Invalid JSON');
-    }
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    // Use raw body for signature verification
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.log('⚠️  Webhook signature verification failed.', err.message);
+    return res.sendStatus(400);
   }
 
   // Handle the event
@@ -169,7 +160,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
       console.log(`Unhandled event type ${event.type}`);
   }
 
-  res.send();
+  res.json({ received: true });
 });
+
 
 app.listen(4242, () => console.log('Node server listening on port 4242!'));
