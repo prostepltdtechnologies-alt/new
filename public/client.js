@@ -1,26 +1,25 @@
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("create-reader-button").disabled = true;
-  document.getElementById("process-payment-button").disabled = true;
-  document.getElementById("simulate-payment-button").disabled = true;
-  document.getElementById("capture-button").disabled = true;
-  document.getElementById("view-dashboard-button").disabled = true;
+    document.getElementById("process-payment-button").disabled = false;
+  document.getElementById("simulate-payment-button").disabled = false;
+  document.getElementById("capture-button").disabled = false;
+  document.getElementById("view-dashboard-button").disabled = false;
 });
+var readerId = "tmr_GPfKsghM64Joif"; // Replace with your reader ID
+// function createLocation() {
+//   return fetch("/create_location", { method: "POST" }).then((response) => {
+//     return response.json();
+//   });
+// }
 
-function createLocation() {
-  return fetch("/create_location", { method: "POST" }).then((response) => {
-    return response.json();
-  });
-}
-
-function createReader() {
-  return fetch("/register_reader", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ location_id: locationId }),
-  }).then((response) => {
-    return response.json();
-  });
-}
+// function createReader() {
+//   return fetch("/register_reader", {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({ location_id: locationId }),
+//   }).then((response) => {
+//     return response.json();
+//   });
+// }
 
 function createPaymentIntent(amount) {
   return fetch("/create_payment_intent", {
@@ -69,42 +68,42 @@ function capture(paymentIntentId) {
 }
 
 var locationId;
-var readerId;
+
 var paymentIntentId;
 
-const createLocationButton = document.getElementById("create-location-button");
-createLocationButton.addEventListener("click", async (event) => {
-  createLocationButton.className = "btn btn-light float-right loading";
-  createLocationButton.disabled = true;
+// const createLocationButton = document.getElementById("create-location-button");
+// createLocationButton.addEventListener("click", async (event) => {
+//   createLocationButton.className = "btn btn-light float-right loading";
+//   createLocationButton.disabled = true;
 
-  createLocation().then((location) => {
-    createLocationButton.className = "btn btn-light float-right";
-    logApiCall("POST /v1/terminal/locations", null, location);
-    locationId = location["id"];
+//   createLocation().then((location) => {
+//     createLocationButton.className = "btn btn-light float-right";
+//     logApiCall("POST /v1/terminal/locations", null, location);
+//     locationId = location["id"];
 
-    document.getElementById("create-reader-button").disabled = false;
-  });
-});
+//     document.getElementById("create-reader-button").disabled = false;
+//   });
+// });
 
-const createReaderButton = document.getElementById("create-reader-button");
-createReaderButton.addEventListener("click", async (event) => {
-  createReaderButton.className = "btn btn-light float-right loading";
-  createReaderButton.disabled = true;
+// const createReaderButton = document.getElementById("create-reader-button");
+// createReaderButton.addEventListener("click", async (event) => {
+//   createReaderButton.className = "btn btn-light float-right loading";
+//   createReaderButton.disabled = true;
 
-  const requestData = { location_id: locationId };
-  createReader().then((reader) => {
-    createReaderButton.className = "btn btn-light float-right";
-    logApiCall("POST /v1/terminal/readers", requestData, reader);
-    readerId = reader["id"];
+//   const requestData = { location_id: locationId };
+//   createReader().then((reader) => {
+//     createReaderButton.className = "btn btn-light float-right";
+//     logApiCall("POST /v1/terminal/readers", requestData, reader);
+//     readerId = reader["id"];
 
-    document.getElementById("process-payment-button").disabled = false;
-  });
-});
+//     document.getElementById("process-payment-button").disabled = false;
+//   });
+// });
 
 const processPaymentButton = document.getElementById("process-payment-button");
 processPaymentButton.addEventListener("click", async (event) => {
   processPaymentButton.className = "btn btn-light float-right loading";
-  processPaymentButton.disabled = true;
+  processPaymentButton.disabled = false;
 
   // First create the payment intent
   amount = document.getElementById("amount-input").value;
@@ -180,7 +179,7 @@ simulatePaymentButton.addEventListener("click", async (event) => {
 const captureButton = document.getElementById("capture-button");
 captureButton.addEventListener("click", async (event) => {
   captureButton.className = "btn btn-light float-right loading";
-  captureButton.disabled = true;
+  captureButton.disabled = false;
 
   const captureRequestData = { payment_intent_id: paymentIntentId };
   capture(paymentIntentId).then((paymentIntent) => {

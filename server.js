@@ -4,12 +4,16 @@ const app = express();
 const { resolve } = require("path");
 // This is your test secret API key.
 const stripe = require("stripe")("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")
+  // "sk_test_51SLDI0G674avhjqur6u1QkQ6cciBGeHHXpDiwSUOKpiAwYSrr62AZXTtNq8FzvQi3Pq3Dnz37dtiOHGJxt9TFzwH00RKADbY5f")
+  //
 // (process.env.STRIPE_SECRET_KEY);
 
 // Stripe webhook endpoint for live events
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const sig = req.headers['stripe-signature'];
   const webhookSecret = 'whsec_Y1OjN6lIRJXiGznDfohrR9Ti4wm9hbH2';
+  //'whsec_MPz6qOfRuFZMR9iKdrxCoocODf2Nq4dC';
+  
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
@@ -43,29 +47,29 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.post("/create_location", async (req, res) => {
-  const location = await stripe.terminal.locations.create({
-    display_name: 'HQ',
-    address: {
-      line1: '1272 Some Street',
-      city: 'London',
-      state: 'England',
-      country: 'GB', // UK country code
-      postal_code: 'SW1A 1AA',
-    }
-  });
-  res.json(location);
-});
+// app.post("/create_location", async (req, res) => {
+//   const location = await stripe.terminal.locations.create({
+//     display_name: 'HQ',
+//     address: {
+//       line1: '1272 Some Street',
+//       city: 'London',
+//       state: 'England',
+//       country: 'GB', // UK country code
+//       postal_code: 'SW1A 1AA',
+//     }
+//   });
+//   res.json(location);
+// });
 
-app.post("/register_reader", async (req, res) => {
-  // Use real device registration code from device screen
-  const reader = await stripe.terminal.readers.create({
-    registration_code: req.body.registration_code, // e.g. code from WisePOS E screen
-    location: req.body.location_id,
-    label: "Main Reader"
-  });
-  res.json(reader);
-});
+// app.post("/register_reader", async (req, res) => {
+//   // Use real device registration code from device screen
+//   const reader = await stripe.terminal.readers.create({
+//     registration_code: req.body.registration_code, // e.g. code from WisePOS E screen
+//     location: req.body.location_id,
+//     label: "Main Reader"
+//   });
+//   res.json(reader);
+// });
 
 app.post("/create_payment_intent", async (req, res) => {
   // For Terminal payments, the 'payment_method_types' parameter must include
@@ -74,16 +78,16 @@ app.post("/create_payment_intent", async (req, res) => {
   // set `capture_method` to `automatic`.
   const intent = await stripe.paymentIntents.create({
     amount: req.body.amount,
-    currency: 'gbp',
+    currency: 'usd',
     payment_method_types: [
       'card_present',
     ],
     capture_method: 'automatic',
-    payment_method_options: {
-      card_present: {
-        capture_method: 'manual_preferred'
-      }
-    }
+    // payment_method_options: {
+    //   card_present: {
+    //     capture_method: 'manual_preferred'
+    //   }
+    // }
   });
   res.json(intent);
 });
